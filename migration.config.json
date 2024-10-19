@@ -1,0 +1,14 @@
+{
+  "mongodb": {
+    "uri": "mongodb://localhost:27017",
+    "user": "root",
+    "password": "1dev2",
+    "database": "playground-migration",
+    "options": {}
+  },
+  "migrations": {
+    "collection": "migrations",
+    "directory": "src/migrations",
+    "ext": ".js"
+  }
+}
