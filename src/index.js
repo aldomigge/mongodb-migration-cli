@@ -74,6 +74,9 @@ const displayHelp = () => {
       create <name>         Cria um novo arquivo de migração
       run <up>              Rodar todas as migrações pendentes
       run <down>            Desfazer a última migração executada
+      fix-import            Corrige a importação de módulos em arquivos de migração
+      generate-config       Gera um arquivo de configuração migration.config.json
+      test                  Testa a conexão com o banco de dados
       help                  Exibe esta mensagem de ajuda
 
     Opções:
@@ -84,11 +87,14 @@ const displayHelp = () => {
     Exemplos:
       migration create create_users_table
       migration create create_users_table --src ./src/migrations
-      migration run up
-      migration run up --file NomeDoArquivo
-      migration run down
-      migration run down --file NomeDoArquivo
-      migration run down --all
+      migration up
+      migration up --file NomeDoArquivo
+      migration down
+      migration down --file NomeDoArquivo
+      migration down --all
+      migration fix-import
+      migration generate-config
+      migration test
       migration help
   `);
 };
@@ -184,17 +190,17 @@ program
     try {
       const migrationsFiles = options.file
         ? [
-            path.join(
-              directory,
-              options.file.endsWith(ext)
-                ? options.file
-                : `${options.file}${ext}`,
-            ),
-          ]
+          path.join(
+            directory,
+            options.file.endsWith(ext)
+              ? options.file
+              : `${options.file}${ext}`,
+          ),
+        ]
         : fs
-            .readdirSync(directory)
-            .filter((file) => file.endsWith(ext))
-            .map((file) => path.join(directory, file));
+          .readdirSync(directory)
+          .filter((file) => file.endsWith(ext))
+          .map((file) => path.join(directory, file));
 
       if (migrationsFiles.length === 0) {
         logger.info('NENHUMA MIGRAÇÃO ENCONTRADA');
@@ -221,7 +227,7 @@ program
 
           await mongoose.connection.db
             .collection(collection)
-            .insertOne({ name: migrationName });
+            .insertOne({ name: migrationName, executed_at: new Date() });
 
           logger.info(`[OK]: MIGRAÇÃO ${migrationName} EXECUTADA COM SUCESSO!`);
         }
@@ -380,6 +386,14 @@ program
     logger.info(
       'Arquivo de configuração migration.config.json gerado com sucesso!',
     );
+  });
+
+program
+  .command('test')
+  .description('Testa a conexão com o banco de dados')
+  .action(async () => {
+    await connectToMongoDB();
+    await mongoose.disconnect();
   });
 
 program.helpOption('-h, --help', 'Exibe informações de ajuda');
