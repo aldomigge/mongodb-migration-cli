@@ -106,6 +106,38 @@ export async function getCollectionByName(collectionName) {
   }
 }
 
+export async function find(collectionName, query = {}) {
+  try {
+    const connection = await connectToMongoDB();
+
+    const collection = connection.db.collection(collectionName);
+
+    return collection.find(query).toArray();
+  } catch (error) {
+    logger.error(
+      `[MODELO]: ERRO AO OBTER A COLEÇÃO${collectionName}:`,
+      error.message,
+    );
+    process.exit(1);
+  }
+}
+
+export async function findOne(collectionName, query = {}) {
+  try {
+    const connection = await connectToMongoDB();
+
+    const collection = connection.db.collection(collectionName);
+
+    return collection.findOne(query);
+  } catch (error) {
+    logger.error(
+      `[MODELO]: ERRO AO OBTER A COLEÇÃO${collectionName}:`,
+      error.message,
+    );
+    process.exit(1);
+  }
+}
+
 const displayHelp = () => {
   console.log(`
     Uso: cli-migration [comando] [opções]
