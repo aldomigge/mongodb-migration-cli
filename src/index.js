@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
-const fs = require('node:fs');
-const path = require('node:path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const { program } = require('commander');
-const pino = require('pino');
-const mongoose = require('mongoose');
+import { program } from 'commander';
+import mongoose from 'mongoose';
+import pino from 'pino';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const rootConfigPath = path.join(process.cwd(), 'migration.config.json');
 const localConfigPath = path.join(__dirname, 'migration.config.json');
@@ -20,6 +24,7 @@ if (fs.existsSync(rootConfigPath)) {
   logger.error(
     'Arquivo de configuração "migration.config.json" não encontrado',
   );
+
   process.exit(1);
 }
 
@@ -38,7 +43,7 @@ const logger = pino({
 
 mongoose.set('strict', true);
 
-async function connectToMongoDB() {
+export async function connectToMongoDB({ logger_flag = false } = {}) {
   try {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     const { uri, user, password, database, options } = config.mongodb;
@@ -54,7 +59,12 @@ async function connectToMongoDB() {
       ...options,
     });
 
-    logger.info('[BANCO DE DADOS]: CONEXÃO COM MONGODB ESTABELECIDA');
+    if (logger_flag) {
+      logger.info('[BANCO DE DADOS]: CONEXÃO COM MONGODB ESTABELECIDA');
+    }
+
+    // console.log(`Connected to MongoDB:`, mongoose.connection);
+    return mongoose.connection;
   } catch (error) {
     logger.error(
       '[BANCO DE DADOS]: ERRO AO CONECTAR AO MONGODB:',
@@ -62,6 +72,36 @@ async function connectToMongoDB() {
     );
 
     mongoose.disconnect();
+    process.exit(1);
+  }
+}
+
+export async function disconnectFromMongoDB() {
+  try {
+    await mongoose.disconnect();
+    logger.info('[BANCO DE DADOS]: CONEXÃO COM MONGODB ENCERRADA');
+  } catch (error) {
+    logger.error(
+      '[BANCO DE DADOS]: ERRO AO DESCONECTAR DO MONGODB:',
+      error.message,
+    );
+  }
+
+  process.exit(0);
+}
+
+export async function getCollectionByName(collectionName) {
+  try {
+    const connection = await connectToMongoDB({ logger_flag: true });
+
+    const collection = connection.db.collection(collectionName);
+
+    return collection;
+  } catch (error) {
+    logger.error(
+      `[MODELO]: ERRO AO OBTER A COLEÇÃO${collectionName}:`,
+      error.message,
+    );
     process.exit(1);
   }
 }
@@ -87,11 +127,11 @@ const displayHelp = () => {
     Exemplos:
       migration create create_users_table
       migration create create_users_table --src ./src/migrations
-      migration up
-      migration up --file NomeDoArquivo
-      migration down
-      migration down --file NomeDoArquivo
-      migration down --all
+      migration run up
+      migration run up --file NomeDoArquivo
+      migration run down
+      migration run down --file NomeDoArquivo
+      migration run down --all
       migration fix-import
       migration generate-config
       migration test
@@ -111,46 +151,44 @@ const getTimestamp = () => {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 };
 
-const currentFileName = path.basename(__filename);
-console.log(path.join(__dirname, currentFileName));
+const currentFileName = path.basename(import.meta.url);
 
 const migrationTemplateJS = (migrationName) => `
-const path = require('node:path');
+import { connectToMongoDB, getCollectionByName } from '${path.join(__dirname, currentFileName)}';
 
-const { connectToMongoDB } = require('${path.join(
-  __dirname,
-  currentFileName,
-)}');
+const MIGRATION_NAME = '${migrationName}';
 
-// Importe o modelo
+// Importe seu modelo
 
-const migrationName = path.basename(__filename, '.js');
+export const up = async () => {
+  await connectToMongoDB();
 
-module.exports = {
-  up: async () => {
-    await connectToMongoDB();
+  try {
+    console.log('Executando a migração:', MIGRATION_NAME);
+    // TODO: Adicionar sua lógica de migração aqui
 
-    try {
-      // TODO: Adicionar sua lógica de migração aqui
+  } catch (error) {
+    console.error(
+      \`Error ao executar a migration \${MIGRATION_NAME}: \${error.message}\`,
+    );
 
-    } catch (error) {
-      console.error(
-        \`Error ao executar a migration \${migrationName}: \${error.message}\`,
-      );
-    }
-  },
+    throw error;
+  }
+};
 
-  down: async () => {
-    await connectToMongoDB();
-    try {
-      // TODO: Adicionar sua lógica de rollback aqui
+export const down = async () => {
+  await connectToMongoDB();
+  try {
+    console.log('Revertendo a migração:', MIGRATION_NAME);
+    // TODO: Adicionar sua lógica de rollback aqui
 
-    } catch (error) {
-      console.error(
-        \`Error ao reverter a migração \${migrationName}: \${error.message}\`,
-      );
-    }
-  },
+  } catch (error) {
+    console.error(
+      \`Error ao reverter a migração \${MIGRATION_NAME}: \${error.message}\`,
+    );
+
+    throw error;
+  }
 };
 `;
 
@@ -185,7 +223,7 @@ program
   .description('Rodar todas as migrações pendentes ou uma migração específica')
   .option('--file <file>', 'Especifica o arquivo de migração')
   .action(async (options) => {
-    await connectToMongoDB();
+    await connectToMongoDB({ logger_flag: true });
 
     try {
       const migrationsFiles = options.file
@@ -236,7 +274,8 @@ program
       logger.error('[ERROR]: Erro ao executar a migração:', error.message);
       console.log(error);
     } finally {
-      await mongoose.disconnect();
+      await disconnectFromMongoDB();
+
       logger.info('[BANCO DE DADOS]: CONEXÃO COM MONGODB ENCERRADA');
     }
   });
@@ -249,7 +288,7 @@ program
   .option('--file <file>', 'Especifica o arquivo de migração')
   .option('--all', 'Desfazer todas as migrações')
   .action(async (options) => {
-    await connectToMongoDB();
+    await connectToMongoDB({ logger_flag: true });
 
     try {
       if (options.all) {
@@ -321,7 +360,8 @@ program
       console.log(error);
       logger.error('Erro ao desfazer a migração:', error.message);
     } finally {
-      await mongoose.disconnect();
+      await disconnectFromMongoDB();
+
       logger.info('[BANCO DE DADOS]: Conexão com MongoDB encerrada');
     }
   });
@@ -339,11 +379,11 @@ program
       const migrationContent = fs.readFileSync(file, 'utf8');
 
       const newMigrationContent = migrationContent.replace(
-        /const { connectToMongoDB } = require\(.+?\);/g,
-        `const { connectToMongoDB } = require('${path.join(
+        /import { connectToMongoDB } from .+?;/g,
+        `import { connectToMongoDB } from '${path.join(
           __dirname,
           currentFileName,
-        )}');`,
+        )}';`,
       );
 
       fs.writeFileSync(file, newMigrationContent, 'utf8');
@@ -392,8 +432,8 @@ program
   .command('test')
   .description('Testa a conexão com o banco de dados')
   .action(async () => {
-    await connectToMongoDB();
-    await mongoose.disconnect();
+    await connectToMongoDB({ logger_flag: true });
+    await disconnectFromMongoDB();
   });
 
 program.helpOption('-h, --help', 'Exibe informações de ajuda');
@@ -407,7 +447,3 @@ if (!process.argv.slice(2).length) {
 }
 
 program.parse(process.argv);
-
-module.exports = {
-  connectToMongoDB,
-};
