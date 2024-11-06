@@ -15,5 +15,8 @@
     "mongoose": "^8.7.2",
     "pino": "^9.5.0",
     "pino-pretty": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97"
   }
 }

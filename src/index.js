@@ -116,8 +116,9 @@ async function getAllCollections() {
   }
 }
 /**
+ * @typedef {object} Document
  * @param {string} collectionName
- * @param {object} document
+ * @param {Document} document
  * @returns {Promise}
  * @description Insere um documento na coleção
  * @example insertOne('users', { name: 'Alice' })
@@ -137,8 +138,9 @@ export async function insertOne(collectionName, document) {
 }
 
 /**
+ * @typedef {object} Document
  * @param {string} collectionName
- * @param {object[]} documents
+ * @param {Document[]} documents
  * @returns {Promise}
  * @description Insere vários documentos na coleção
  * @example insertMany('users', [{ name: 'Jean' }, { name: 'Mikaio' }, { name: 'Aldo' }])
@@ -158,9 +160,11 @@ export async function insertMany(collectionName, documents) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
+ * @typedef {mongoose.UpdateQuery<any>} Update
  * @param {string} collectionName
- * @param {object} filter
- * @param {object} update
+ * @param {FilterQuery} filter
+ * @param {Update} update
  * @returns {Promise}
  * @description Atualiza um documento na coleção com base em um filtro
  * @example updateOne('users', { email: 'exemplo@email.com' }, { $set: { active: true } })
@@ -180,9 +184,11 @@ export async function updateOne(collectionName, filter, update) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
+ * @typedef {mongoose.UpdateQuery<any>} UpdateQuery
  * @param {string} collectionName
- * @param {object} filter
- * @param {object} update
+ * @param {FilterQuery} filter
+ * @param {UpdateQuery} update
  * @returns {Promise}
  * @description Atualiza vários documentos na coleção com base em um filtro
  * @example updateMany('users', { age: { $lt: 18 } }, { $set: { underage: true } })
@@ -202,8 +208,9 @@ export async function updateMany(collectionName, filter, update) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} filter
+ * @param {FilterQuery} filter
  * @returns {Promise}
  * @description Deleta um documento na coleção com base em um filtro
  * @example deleteOne('users', { email: 'exemplo@email.com' })
@@ -223,8 +230,9 @@ export async function deleteOne(collectionName, filter) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} filter
+ * @param {FilterQuery} filter
  * @returns {Promise}
  * @description Deleta vários documentos na coleção com base em um filtro
  * @example deleteMany('users', { age: { $lt: 18 } })
@@ -244,9 +252,10 @@ export async function deleteMany(collectionName, filter) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} query
- * @returns {Promise}
+ * @param {FilterQuery} query
+ * @returns {Promise<number>}
  * @description Conta os documentos na coleção com base em um filtro
  * @example countDocuments('users', { age: { $gte: 18 } })
  */
@@ -265,9 +274,10 @@ export async function countDocuments(collectionName, query = {}) {
 }
 
 /**
+ * @typedef {mongoose.PipelineStage} PipelineStage
  * @param {string} collectionName
- * @param {object[]} pipeline
- * @returns {Promise}
+ * @param {PipelineStage[]} pipeline
+ * @returns {Promise<any[]>}
  * @description Realiza uma operação de agregação na coleção
  * @example aggregate('users', [
  * { $match: { age: { $gte: 18 } } }, 
@@ -289,9 +299,10 @@ export async function aggregate(collectionName, pipeline) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} query
- * @returns {Promise}
+ * @param {FilterQuery} query
+ * @returns {Promise<boolean>}
  * @description Verifica se um documento existe na coleção
  * @example exists('users', { email: 'exemplo@email.com' })
  */
@@ -310,9 +321,10 @@ export async function exists(collectionName, query = {}) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} query
- * @returns {Promise}
+ * @param {FilterQuery} query
+ * @returns {Promise<any[]>}
  * @description Busca vários documentos na coleção com base em um filtro. Pode ser usado para buscar todos os documentos da coleção.
  * @example findOne('users', { email: 'exemplo@email.com' })
  */
@@ -332,9 +344,10 @@ export async function find(collectionName, query = {}) {
 }
 
 /**
+ * @typedef {mongoose.FilterQuery<any>} FilterQuery
  * @param {string} collectionName
- * @param {object} query
- * @returns {Promise}
+ * @param {FilterQuery} query
+ * @returns {Promise<any>}
  * @description Busca um documento na coleção com base em um filtro. Retorna o primeiro documento encontrado.
  * @example findOne('users', { email: 'exemplo@email.com' })
  */
