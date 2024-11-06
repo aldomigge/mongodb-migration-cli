@@ -6,11 +6,8 @@
   "bin": {
     "migration": "./src/index.js"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
-  "author": "",
+  "author": "Aldo B. Migge",
   "license": "ISC",
   "description": "",
   "dependencies": {
