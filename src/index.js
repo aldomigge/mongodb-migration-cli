@@ -115,7 +115,13 @@ async function getAllCollections() {
     process.exit(1);
   }
 }
-
+/**
+ * @param {string} collectionName
+ * @param {object} document
+ * @returns {Promise}
+ * @description Insere um documento na coleção
+ * @example insertOne('users', { name: 'Alice' })
+ */
 export async function insertOne(collectionName, document) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -130,6 +136,13 @@ export async function insertOne(collectionName, document) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object[]} documents
+ * @returns {Promise}
+ * @description Insere vários documentos na coleção
+ * @example insertMany('users', [{ name: 'Jean' }, { name: 'Mikaio' }, { name: 'Aldo' }])
+ */
 export async function insertMany(collectionName, documents) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -144,6 +157,14 @@ export async function insertMany(collectionName, documents) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} filter
+ * @param {object} update
+ * @returns {Promise}
+ * @description Atualiza um documento na coleção com base em um filtro
+ * @example updateOne('users', { email: 'exemplo@email.com' }, { $set: { active: true } })
+ */
 export async function updateOne(collectionName, filter, update) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -158,6 +179,14 @@ export async function updateOne(collectionName, filter, update) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} filter
+ * @param {object} update
+ * @returns {Promise}
+ * @description Atualiza vários documentos na coleção com base em um filtro
+ * @example updateMany('users', { age: { $lt: 18 } }, { $set: { underage: true } })
+ */
 export async function updateMany(collectionName, filter, update) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -172,6 +201,13 @@ export async function updateMany(collectionName, filter, update) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} filter
+ * @returns {Promise}
+ * @description Deleta um documento na coleção com base em um filtro
+ * @example deleteOne('users', { email: 'exemplo@email.com' })
+ */
 export async function deleteOne(collectionName, filter) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -186,6 +222,13 @@ export async function deleteOne(collectionName, filter) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} filter
+ * @returns {Promise}
+ * @description Deleta vários documentos na coleção com base em um filtro
+ * @example deleteMany('users', { age: { $lt: 18 } })
+ */
 export async function deleteMany(collectionName, filter) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -200,6 +243,13 @@ export async function deleteMany(collectionName, filter) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} query
+ * @returns {Promise}
+ * @description Conta os documentos na coleção com base em um filtro
+ * @example countDocuments('users', { age: { $gte: 18 } })
+ */
 export async function countDocuments(collectionName, query = {}) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -214,6 +264,16 @@ export async function countDocuments(collectionName, query = {}) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object[]} pipeline
+ * @returns {Promise}
+ * @description Realiza uma operação de agregação na coleção
+ * @example aggregate('users', [
+ * { $match: { age: { $gte: 18 } } }, 
+ * { $group: { _id: '$city', total: { $sum: 1 } } }
+ * ])
+ */
 export async function aggregate(collectionName, pipeline) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -228,6 +288,13 @@ export async function aggregate(collectionName, pipeline) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} query
+ * @returns {Promise}
+ * @description Verifica se um documento existe na coleção
+ * @example exists('users', { email: 'exemplo@email.com' })
+ */
 export async function exists(collectionName, query = {}) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -242,6 +309,13 @@ export async function exists(collectionName, query = {}) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} query
+ * @returns {Promise}
+ * @description Busca vários documentos na coleção com base em um filtro. Pode ser usado para buscar todos os documentos da coleção.
+ * @example findOne('users', { email: 'exemplo@email.com' })
+ */
 export async function find(collectionName, query = {}) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -257,6 +331,13 @@ export async function find(collectionName, query = {}) {
   }
 }
 
+/**
+ * @param {string} collectionName
+ * @param {object} query
+ * @returns {Promise}
+ * @description Busca um documento na coleção com base em um filtro. Retorna o primeiro documento encontrado.
+ * @example findOne('users', { email: 'exemplo@email.com' })
+ */
 export async function findOne(collectionName, query = {}) {
   try {
     const collection = await getCollectionByName(collectionName);
@@ -276,7 +357,7 @@ const displayHelp = () => {
       run <up>              Rodar todas as migrações pendentes
       run <down>            Desfazer a última migração executada
       fix-import            Corrige a importação de módulos em arquivos de migração
-      generate-config       Gera um arquivo de configuração migration.config.json
+      init                  Gera um arquivo de configuração migration.config.json
       test                  Testa a conexão com o banco de dados
       all-collections       Lista todas as coleções do banco de dados
       all-migrations        Lista todas as migrações executadas
@@ -296,7 +377,7 @@ const displayHelp = () => {
       migration run down --file NomeDoArquivo
       migration run down --all
       migration fix-import
-      migration generate-config
+      migration init
       migration test
       migration all-collections
       migration all-migrations
@@ -532,7 +613,7 @@ program
   });
 
 program
-  .command('generate-config')
+  .command('init')
   .description('Gera um arquivo de configuração migration.config.json')
   .option('--overwrite', 'Sobrescreve o arquivo de configuração existente')
   .action((option) => {
@@ -553,7 +634,7 @@ program
 
     if (fs.existsSync(configPath) && !option.overwrite) {
       logger.error(
-        '[GENERATE-CONFIG]: O arquivo de configuração migration.config.json já existe. Use a opção --overwrite para sobrescrever o arquivo existente.',
+        '[INIT]: O arquivo de configuração migration.config.json já existe. Use a opção --overwrite para sobrescrever o arquivo existente.',
       );
       process.exit(1);
     }
@@ -561,7 +642,7 @@ program
     fs.writeFileSync(configPath, JSON.stringify(configTemplate, null, 2));
 
     logger.info(
-      '[GENERATE-CONFIG]: Arquivo de configuração migration.config.json gerado com sucesso!',
+      '[INIT]: Arquivo de configuração migration.config.json gerado com sucesso!',
     );
   });
 
