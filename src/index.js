@@ -27,7 +27,7 @@ if (fs.existsSync(rootConfigPath)) {
 
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-const { collection, directory, ext } = config.migrations;
+const { collection, directory, ext, collections } = config.migrations;
 
 const logger = createLogger();
 

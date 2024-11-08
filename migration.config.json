@@ -10,5 +10,6 @@
     "collection": "migrations",
     "directory": "src/migrations",
     "ext": ".js"
-  }
+  },
+  "collections": []
 }
