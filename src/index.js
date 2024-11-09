@@ -21,13 +21,15 @@ if (fs.existsSync(rootConfigPath)) {
 } else if (fs.existsSync(localConfigPath)) {
   configPath = localConfigPath;
 } else {
-  console.error('Arquivo de configuração "migration.config.json" não encontrado');
+  console.error(
+    'Arquivo de configuração "migration.config.json" não encontrado',
+  );
   process.exit(1);
 }
 
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-const { collection, directory, ext, collections } = config.migrations;
+const { collection, directory, ext } = config.migrations;
 
 const logger = createLogger();
 
@@ -72,7 +74,10 @@ async function connectToMongoDB({ logger_flag = false } = {}) {
 
     return mongoConnection;
   } catch (error) {
-    logger.error('[BANCO DE DADOS]: ERRO AO CONECTAR AO MONGODB:', error.message);
+    logger.error(
+      '[BANCO DE DADOS]: ERRO AO CONECTAR AO MONGODB:',
+      error.message,
+    );
     process.exit(1);
   }
 }
@@ -88,7 +93,10 @@ async function disconnectFromMongoDB({ logger_flag = false } = {}) {
       logger.info('[BANCO DE DADOS]: CONEXÃO COM MONGODB ENCERRADA');
     }
   } catch (error) {
-    logger.error('[BANCO DE DADOS]: ERRO AO DESCONECTAR DO MONGODB:', error.message);
+    logger.error(
+      '[BANCO DE DADOS]: ERRO AO DESCONECTAR DO MONGODB:',
+      error.message,
+    );
   }
 
   process.exit(0);
@@ -96,11 +104,24 @@ async function disconnectFromMongoDB({ logger_flag = false } = {}) {
 
 async function getCollectionByName(collectionName) {
   try {
+    if (
+      !!config.collections.length &&
+      !config.collections.includes(collectionName)
+    ) {
+      logger.error(
+        `[MODELO]: ERRO: A COLEÇÃO ${collectionName} NÃO ESTÁ PERMITIDA. ADICIONE A COLEÇÃO AO ARQUIVO DE CONFIGURAÇÃO "migration.config.json"`,
+      );
+      process.exit(1);
+    }
+
     const connection = await connectToMongoDB({ logger_flag: true });
 
     return connection.db.collection(collectionName);
   } catch (error) {
-    logger.error(`[MODELO]: ERRO AO OBTER A COLEÇÃO ${collectionName}:`, error.message);
+    logger.error(
+      `[MODELO]: ERRO AO OBTER A COLEÇÃO ${collectionName}:`,
+      error.message,
+    );
     process.exit(1);
   }
 }
@@ -280,7 +301,7 @@ export async function countDocuments(collectionName, query = {}) {
  * @returns {Promise<any[]>}
  * @description Realiza uma operação de agregação na coleção
  * @example aggregate('users', [
- * { $match: { age: { $gte: 18 } } }, 
+ * { $match: { age: { $gte: 18 } } },
  * { $group: { _id: '$city', total: { $sum: 1 } } }
  * ])
  */
@@ -356,10 +377,41 @@ export async function findOne(collectionName, query = {}) {
     const collection = await getCollectionByName(collectionName);
     return collection.findOne(query);
   } catch (error) {
-    logger.error(`[MODELO]: ERRO AO OBTER A COLEÇÃO ${collectionName}:`, error.message);
+    logger.error(
+      `[MODELO]: ERRO AO OBTER A COLEÇÃO ${collectionName}:`,
+      error.message,
+    );
     process.exit(1);
   }
 }
+
+const verifyCollectionExistsAndCreated = async () => {
+  await connectToMongoDB({ logger_flag: false });
+
+  const collections = await getAllCollections();
+
+  if (!collections.find((col) => col.name === collection)) {
+    await mongoose.connection.db.createCollection(collection);
+    logger.info(`[INIT]: COLEÇÃO ${collection} CRIADA COM SUCESSO!`);
+  }
+
+  await disconnectFromMongoDB({ logger_flag: false });
+};
+
+const verifyCollection = async () => {
+  await connectToMongoDB({ logger_flag: false });
+
+  const collections = await getAllCollections();
+
+  if (!collections.find((col) => col.name === collection)) {
+    logger.error(
+      `[INIT]: COLEÇÃO ${collection} NÃO ENCONTRADA. CRIE A COLEÇÃO MANUALMENTE OU EXECUTE O COMANDO "init" PARA CRIAR A COLEÇÃO AUTOMATICAMENTE.`,
+    );
+    process.exit(1);
+  }
+
+  await disconnectFromMongoDB({ logger_flag: false });
+};
 
 const displayHelp = () => {
   console.log(`
@@ -454,7 +506,9 @@ program
       logger.info(`[CREATE]: ARQUIVO DE MIGRAÇÃO CRIADO: ${fileName}`);
       logger.info(`[CREATE]: ${filePath}`);
     } catch (error) {
-      logger.error(`[CREATE::ERROR]: ERROR AO CRIAR A MIGRAÇÃO: ${error.message}`);
+      logger.error(
+        `[CREATE::ERROR]: ERROR AO CRIAR A MIGRAÇÃO: ${error.message}`,
+      );
     }
   });
 
@@ -468,17 +522,17 @@ program
     try {
       const migrationsFiles = options.file
         ? [
-          path.join(
-            directory,
-            options.file.endsWith(ext)
-              ? options.file
-              : `${options.file}${ext}`,
-          ),
-        ]
+            path.join(
+              directory,
+              options.file.endsWith(ext)
+                ? options.file
+                : `${options.file}${ext}`,
+            ),
+          ]
         : fs
-          .readdirSync(directory)
-          .filter((file) => file.endsWith(ext))
-          .map((file) => path.join(directory, file));
+            .readdirSync(directory)
+            .filter((file) => file.endsWith(ext))
+            .map((file) => path.join(directory, file));
 
       if (migrationsFiles.length === 0) {
         logger.info('[UP]: NENHUMA MIGRAÇÃO ENCONTRADA');
@@ -550,7 +604,9 @@ program
           if (typeof migrationModule.down === 'function') {
             logger.info(`[DOWN]: DESFAZENDO MIGRAÇÃO: ${migrationName}`);
             await migrationModule.down();
-            logger.info(`[DOWN]: MIGRAÇÃO ${migrationName} DESFEITA COM SUCESSO!`);
+            logger.info(
+              `[DOWN]: MIGRAÇÃO ${migrationName} DESFEITA COM SUCESSO!`,
+            );
 
             await mongoose.connection.db
               .collection(collection)
@@ -587,7 +643,9 @@ program
         if (typeof migrationModule.down === 'function') {
           logger.info(`[DOWN]: DESFAZENDO MIGRAÇÃO: ${migrationName}`);
           await migrationModule.down();
-          logger.info(`[DOWN]: MIGRAÇÃO ${migrationName} DESFEITA COM SUCESSO!`);
+          logger.info(
+            `[DOWN]: MIGRAÇÃO ${migrationName} DESFEITA COM SUCESSO!`,
+          );
 
           await mongoose.connection.db
             .collection(collection)
@@ -596,7 +654,10 @@ program
       }
     } catch (error) {
       console.log(error);
-      logger.error('[DOWN::ERROR]: Erro ao desfazer a migração:', error.message);
+      logger.error(
+        '[DOWN::ERROR]: Erro ao desfazer a migração:',
+        error.message,
+      );
     } finally {
       await disconnectFromMongoDB();
     }
@@ -616,7 +677,10 @@ program
 
       const newMigrationContent = migrationContent.replace(
         /import\s+\*\s+as\s+MigrationCli\s+from\s+['"].+?['"];/g,
-        `import * as MigrationCli from '${path.relative(path.dirname(file), __filename)}';`,
+        `import * as MigrationCli from '${path.relative(
+          path.dirname(file),
+          __filename,
+        )}';`,
       );
 
       fs.writeFileSync(file, newMigrationContent, 'utf8');
