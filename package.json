@@ -1,15 +1,13 @@
 {
-  "name": "cli-migration-mongodb",
+  "name": "@aldobm/migration-mongodb",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "bin": {
-    "migration": "./src/index.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "migration": "bin/cli.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "aldobarbosa",
   "license": "ISC",
   "description": "",
   "dependencies": {
@@ -17,5 +15,8 @@
     "mongoose": "^8.7.2",
     "pino": "^9.5.0",
     "pino-pretty": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97"
   }
 }
