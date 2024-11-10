@@ -1,13 +1,13 @@
 {
-  "name": "cli-migration-mongodb",
+  "name": "@aldobm/migration-mongodb",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "migration": "./src/index.js"
+    "migration": "bin/cli.js"
   },
   "keywords": [],
-  "author": "Aldo B. Migge",
+  "author": "aldobarbosa",
   "license": "ISC",
   "description": "",
   "dependencies": {

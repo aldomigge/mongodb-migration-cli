@@ -1,4 +1,6 @@
 node_modules
 
-src/*
-!src/**/*.js
+migrations
+
+# compose.*
+# docker-compose.*

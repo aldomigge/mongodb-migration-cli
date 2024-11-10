@@ -8,7 +8,7 @@
   },
   "migrations": {
     "collection": "migrations",
-    "directory": "src/migrations",
+    "directory": "migrations",
     "ext": ".js"
   },
   "collections": ["devices", "users"]
