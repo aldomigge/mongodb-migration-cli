@@ -11,20 +11,27 @@ const {
 } = loadConfig();
 
 const upCommand = async (options) => {
+  if (options.safe && !options.file) {
+    logger.error(
+      '[UP::ERROR]: A flag --safe só é válida para uma migração específica',
+    );
+    return;
+  };
+
   await connectToMongoDB({ logger_flag: false });
 
   try {
     const migrationsFiles = options.file
       ? [
-          path.join(
-            directory,
-            options.file.endsWith(ext) ? options.file : `${options.file}${ext}`,
-          ),
-        ]
+        path.join(
+          directory,
+          options.file.endsWith(ext) ? options.file : `${options.file}${ext}`,
+        ),
+      ]
       : fs
-          .readdirSync(directory)
-          .filter((file) => file.endsWith(ext))
-          .map((file) => path.join(directory, file));
+        .readdirSync(directory)
+        .filter((file) => file.endsWith(ext))
+        .map((file) => path.join(directory, file));
 
     if (migrationsFiles.length === 0) {
       logger.info('[UP]: NENHUMA MIGRAÇÃO ENCONTRADA');
@@ -49,11 +56,22 @@ const upCommand = async (options) => {
 
         await migrationModule.up();
 
+        const isSafeLock = options.safe && options.file ? true : false;
+
         await mongoose.connection.db
           .collection(collection)
-          .insertOne({ name: migrationName, executedAt: new Date() });
+          .insertOne({
+            name: migrationName,
+            safeLock: isSafeLock,
+            registeredAt: new Date(),
+            executedAt: new Date()
+          });
 
-        logger.info(`[UP]: MIGRAÇÃO ${migrationName} EXECUTADA COM SUCESSO!`);
+        if (!isSafeLock) {
+          logger.info(`[UP]: MIGRAÇÃO ${migrationName} EXECUTADA COM SUCESSO!`);
+        } else {
+          logger.info(`[UP]: MIGRAÇÃO ${migrationName} EXECUTADA COM SUCESSO! (Segura)`);
+        }
       }
     }
   } catch (error) {
