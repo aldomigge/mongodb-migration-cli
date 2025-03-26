@@ -25,11 +25,31 @@ const downCommand = async (options) => {
         return;
       }
 
+      if (allMigrations[0].safeLock && !options.force) {
+        logger.info(
+          '[DOWN]: A ÚLTIMA MIGRAÇÃO É UMA MIGRAÇÃO SEGURA. USE A FLAG --FORCE PARA DESFAZER.',
+        );
+        return;
+      }
+
       for (const migration of allMigrations) {
+        if (migration.safeLock && !options.force) return;
+
         const migrationName = migration.name;
         const migrationModule = await import(
           path.resolve(`${directory}/${migrationName}${ext}`)
-        ).then((mod) => mod.default || mod);
+        ).then((mod) => mod.default || mod).catch((error) => {
+
+          return null;
+        });
+
+        if (!migrationModule) {
+          logger.error(
+            `[DOWN::ERROR]: Erro ao importar o arquivo de migração: ${migrationName}`,
+          );
+
+          continue;
+        }
 
         if (typeof migrationModule.down === 'function') {
           logger.info(`[DOWN]: DESFAZENDO MIGRAÇÃO: ${migrationName}`);
@@ -60,6 +80,13 @@ const downCommand = async (options) => {
 
         if (lastMigration.length === 0) {
           logger.info('[DOWN]: NENHUMA MIGRAÇÃO ENCONTRADA');
+          return;
+        }
+
+        if (lastMigration[0].safeLock && !options.force) {
+          logger.info(
+            '[DOWN]: A ÚLTIMA MIGRAÇÃO É UMA MIGRAÇÃO SEGURA. USE A FLAG --FORCE PARA DESFAZER.',
+          );
           return;
         }
 
