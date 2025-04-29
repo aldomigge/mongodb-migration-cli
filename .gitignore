@@ -4,3 +4,5 @@ migrations
 
 compose.*
 docker-compose.*
+
+docker/*
