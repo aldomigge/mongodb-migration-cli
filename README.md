@@ -7,7 +7,7 @@ Uma ferramenta de linha de comando para gerenciar migrações de banco de dados 
 Primeiro, clone o repositório e instale as dependências:
 
 ```bash
-git clone https://github.com/clepverse/mongodb-migration-cli.git
+git clone https://github.com/aldomigge/mongodb-migration-cli.git
 cd mongodb-migration-cli
 npm install
 ```
